@@ -107,3 +107,89 @@ class UNet(nn.Module):
         # 输出预测，这里大小跟输入是一致的
         # 可以把下采样时的中间抠出来再进行拼接，这样修改后输出就会更小
         return self.Th(self.pred(O4))
+
+
+class Discriminator(nn.Module):
+    """
+    判别器
+    """
+    def __init__(self):
+        super(Discriminator, self).__init__()
+        self.net = nn.Sequential(
+            # Conv1 H/W:256->128
+            nn.Conv2d(1, 32, 3, 2, 1),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(),
+
+
+            # Conv2 H/W:128->64
+            nn.Conv2d(32, 64, 3, 2, 1),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),
+
+
+            # Conv3 H/W:64->32
+            nn.Conv2d(64, 128, 3, 2, 1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),
+
+
+            # Conv4 H/W:32->16
+            nn.Conv2d(128, 256, 3, 2, 1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+
+            # Conv5 H/W:16->8
+            nn.Conv2d(256, 512, 3, 2, 1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(),
+
+            # Conv6 H/W 8->4
+            nn.Conv2d(512, 1, 3, 2, 1),
+            nn.Sigmoid()  # 4×4
+        )
+
+    def forward(self, img):
+        return self.net(img)
+
+
+class Generator(nn.Module):
+    """
+    生成器
+    """
+    def __init__(self):
+        super(Generator, self).__init__()
+        self.net = UNet()  # 使用 UNet 作为生成模型
+
+    def forward(self, x):
+        return self.net(x)  # 输出 Tensor size :[1,1,256,256]
+
+
+if __name__ == '__main__':
+    import numpy as np
+    from torch import Tensor
+    import torchvision.transforms as transforms
+
+    def get_meshgrid() -> Tensor:
+        """
+        获取meshgrid，作为Unet的输入
+        :return: tensor形式的meshgrid，size:[1,2,256,256]
+        """
+        transform = transforms.ToTensor()
+        meshgrid_1 = (np.ones((256, 256)) * np.arange(256)).astype(np.uint8)
+        meshgrid_2 = meshgrid_1.T
+
+        # 两个通道叠加起来,转成张量且最外面增加1维
+        meshgrid_0 = np.array([meshgrid_1, meshgrid_2])
+        meshgrid_tensor = transform(meshgrid_0).permute(1, 0, 2)[None, :, :, :]
+
+        return meshgrid_tensor
+
+    meshgrid = get_meshgrid()
+
+    dis = Discriminator()
+    gen = Generator()
+
+    fake_img = gen(meshgrid)
+    print(fake_img.size())
+    print(dis(fake_img))
