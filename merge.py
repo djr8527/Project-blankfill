@@ -52,20 +52,20 @@ def merge1(path0, path1):
 
 if __name__ == '__main__':
     # 合并 所有的 待修补图像 和 修补后图像（自然场景图）
-    # root = os.path.join(os.path.abspath(''), 'dataset/自然场景实验数据集')
-    # save_dir = os.path.join(os.path.abspath(''), 'log/自然多轮迭代输出')
-    # for dir in os.listdir(root):
-    #     path0 = os.path.join(root, dir)
-    #     path1 = os.path.join(save_dir, dir)
-    #     merge0(path0, path1)
-
-    # 合并 所有的 待修补图像 和 修补后图像（井像静态图）
-    root = os.path.join(os.path.abspath(''), 'dataset/井像静态图数据集')
-    save_dir = os.path.join(os.path.abspath(''), 'log/井像多轮迭代输出')
+    root = os.path.join(os.path.abspath(''), 'dataset/自然场景实验数据集')
+    save_dir = os.path.join(os.path.abspath(''), 'log/自然多轮迭代输出')
     for dir in os.listdir(root):
         path0 = os.path.join(root, dir)
         path1 = os.path.join(save_dir, dir)
-        merge1(path0, path1)
+        merge0(path0, path1)
+
+    # 合并 所有的 待修补图像 和 修补后图像（井像静态图）
+    # root = os.path.join(os.path.abspath(''), 'dataset/井像静态图数据集')
+    # save_dir = os.path.join(os.path.abspath(''), 'log/井像多轮迭代输出')
+    # for dir in os.listdir(root):
+    #     path0 = os.path.join(root, dir)
+    #     path1 = os.path.join(save_dir, dir)
+    #     merge1(path0, path1)
 
     # # 合并 待修补图像 和 修补后图像（一对）
     # root = os.path.join(os.path.abspath(''), 'dataset/井像静态图数据集')

@@ -1,8 +1,9 @@
 import os.path
-from UNet import UNet
 from loss import PixelLoss
 import cv2
 import torch
+from tqdm import tqdm
+import datetime
 import argparse
 import numpy as np
 import torch.nn as nn
@@ -16,7 +17,7 @@ from UNet import Generator
 
 def setup_seed(seed):
     """
-    设置随机种子保证结果可复现
+    设置随机种子
     :param seed:
     :return:
     """
@@ -24,6 +25,13 @@ def setup_seed(seed):
     torch.cuda.manual_seed_all(seed)
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
+
+
+def get_parameter_number(model):
+    total_num = sum(p.numel() for p in model.parameters())
+    trainable_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    info = f'Total : {str(total_num / 1000 ** 2)} M, Trainable: {str(trainable_num / 1000 ** 2)} M'
+    return info
 
 
 def get_meshgrid() -> Tensor:
@@ -57,6 +65,10 @@ def get_gray(path) -> Tensor:
 
 
 def get_mask() -> Tensor:
+    """
+    获取掩膜mask
+    :return:
+    """
     mask = get_gray(args.dataset_dir + '/mask.jpg')
     mask[mask > 0.5] = 1
     mask[mask < 0.5] = 0
@@ -78,11 +90,15 @@ def train():
     gen = Generator().to(device)
     dis = Discriminator().to(device)
 
+    # 模型参数量计算
+    print('Generator' + get_parameter_number(gen))
+    print('Generator' + get_parameter_number(dis))
+
     # 定义损失以及优化器
     criterion = nn.MSELoss()
     Pixel_criterion = PixelLoss()
-    g_optimizer = Adam(gen.parameters(), lr=args.lr)
-    d_optimizer = Adam(dis.parameters(), lr=args.lr)
+    g_optimizer = Adam(gen.parameters(), lr=args.g_lr)
+    d_optimizer = Adam(dis.parameters(), lr=args.d_lr)
 
     for epoch in range(args.epoch_num):
         # 打开训练模式
@@ -136,7 +152,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset_dir', default='dataset/自然场景实验数据集/2', type=str, help='数据集路径')
     parser.add_argument('--log_dir', default='log/自然多轮迭代输出/2', type=str, help='多轮迭代输出路径')
-    parser.add_argument('--lr', default=0.01, type=float, help='学习率')
+    parser.add_argument('--g_lr', default=0.01, type=float, help='生成器学习率')
+    parser.add_argument('--d_lr', default=0.01, type=float, help='判别器学习率')
     parser.add_argument('--epoch_num', default=2000, type=int, help='迭代次数')
     parser.add_argument('--alpha', default=0.9, type=float, help='生成器两种损失的权重系数')
 
@@ -144,7 +161,7 @@ if __name__ == '__main__':
 
     train()
 
-    # # 训练所有的自然场景实验数据集
+    # 训练所有的自然场景实验数据集
     # for dir in os.listdir('dataset/自然场景实验数据集'):
     #     args.dataset_dir = os.path.join('dataset/自然场景实验数据集', dir)
     #     args.log_dir = os.path.join('log/自然多轮迭代输出', dir)

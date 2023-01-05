@@ -152,6 +152,16 @@ class Discriminator(nn.Module):
     def forward(self, img):
         return self.net(img)
 
+    def _initialize_weights(self):
+        for m in self.net.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                nn.init.constant_(m.bias, 0)
+
 
 class Generator(nn.Module):
     """
@@ -163,6 +173,16 @@ class Generator(nn.Module):
 
     def forward(self, x):
         return self.net(x)  # 输出 Tensor size :[1,1,256,256]
+
+    def _initialize_weights(self):
+        for m in self.net.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                nn.init.constant_(m.bias, 0)
 
 
 if __name__ == '__main__':
