@@ -56,5 +56,5 @@ def get_well_dataset():
 
 
 if __name__ == '__main__':
-    get_natural_dataset()
-    # get_well_dataset()
+    # get_natural_dataset()
+    get_well_dataset()

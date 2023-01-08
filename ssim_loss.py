@@ -1,21 +1,9 @@
+import random
+
 import torch
-import torch.nn as nn
-from torch import Tensor
 import torch.nn.functional as F
 from math import exp
-
-
-class PixelLoss(nn.Module):
-    """
-    基于像素的平均损失
-    """
-    def __init__(self):
-        super(PixelLoss, self).__init__()
-
-    def forward(self, pred: Tensor, y: Tensor, mask: Tensor) -> Tensor:
-        pixel_diff = torch.abs(pred*mask-y*mask)
-        loss = torch.sum(pixel_diff)/torch.sum(mask)
-        return loss
+import numpy as np
 
 
 # 计算一维的高斯分布向量
@@ -91,10 +79,7 @@ def ssim(img1, img2, window_size=11, window=None, size_average=True, full=False,
 
 # Classes to re-use window
 class SSIM(torch.nn.Module):
-    """
-    基于图像结构相似性的损失
-    """
-    def __init__(self, window_size=11, size_average=True, val_range=None, device=None):
+    def __init__(self, window_size=11, size_average=True, val_range=None):
         super(SSIM, self).__init__()
         self.window_size = window_size
         self.size_average = size_average
@@ -102,7 +87,7 @@ class SSIM(torch.nn.Module):
 
         # Assume 1 channel for SSIM
         self.channel = 1
-        self.window = create_window(window_size).to(device)
+        self.window = create_window(window_size)
 
     def forward(self, img1, img2):
         (_, channel, _, _) = img1.size()
@@ -117,10 +102,25 @@ class SSIM(torch.nn.Module):
         return ssim(img1, img2, window=window, window_size=self.window_size, size_average=self.size_average)
 
 
-if __name__ == '__main__':
-    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
-    i1 = torch.randn([1,1,256,256]).to(device)
-    i2 = torch.randn([1,1,256,256]).to(device)
-    cri = SSIM(device=device)
-    loss = cri(i1,i2)
-    print(loss)
+def setup_seed(seed):
+    """
+    设置随机种子
+    :param seed:
+    :return:
+    """
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.cuda.manual_seed(seed)
+    np.random.seed(seed)
+#
+#
+# if __name__ == '__main__':
+#     criterion = SSIM()
+#     # setup_seed(20222)
+#     img1 = torch.randn([1, 1, 256, 256])
+#     img2 = torch.randn([1, 1, 256, 256])
+#     loss = criterion(img1, img2)
+#     print(img1)
+#     print(img2)
+#     print(loss)
